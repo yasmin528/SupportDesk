@@ -2,6 +2,11 @@
 
 SupportDesk is a support ticket management application built with Angular and RxJS. Agents can manage support tickets, update ticket statuses and priorities, assign tickets, communicate through comments, and track changes through an activity timeline.
 
+## Live Demo
+
+[**View SupportDesk Live Demo**](https://support-desk-delta-lac.vercel.app/)
+
+
 ## Technologies
 
 - Angular 22
