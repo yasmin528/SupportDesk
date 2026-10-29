@@ -1,0 +1,97 @@
+<main class="auth-shell">
+  <section class="card auth-card">
+    <div class="auth-brand"><span class="brand-mark">S</span> SupportDesk</div>
+    <h1 class="auth-title">Create your account</h1>
+    <p class="muted">Track and resolve support requests as a team.</p>
+
+    <form class="stack auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (serverError()) {
+        <div class="alert alert-error" role="alert">{{ serverError() }}</div>
+      }
+
+      <div class="form-field">
+        <label class="label" for="name">Full name</label>
+        @let name = form.controls.name;
+        <input
+          id="name"
+          class="input"
+          autocomplete="name"
+          formControlName="name"
+          [class.invalid]="name.touched && name.invalid"
+        />
+        @if (name.touched && name.hasError('required')) {
+          <span class="field-error">Name is required.</span>
+        } @else if (name.touched && name.hasError('minlength')) {
+          <span class="field-error">Name must be at least 2 characters.</span>
+        } @else if (name.touched && name.hasError('maxlength')) {
+          <span class="field-error">Name must be 60 characters or fewer.</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="label" for="email">Email</label>
+        @let email = form.controls.email;
+        <input
+          id="email"
+          class="input"
+          type="email"
+          autocomplete="email"
+          formControlName="email"
+          [class.invalid]="email.touched && email.invalid"
+        />
+        @if (email.touched && email.hasError('required')) {
+          <span class="field-error">Email is required.</span>
+        } @else if (email.touched && email.hasError('email')) {
+          <span class="field-error">Enter a valid email address.</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="label" for="password">Password</label>
+        @let password = form.controls.password;
+        <input
+          id="password"
+          class="input"
+          type="password"
+          autocomplete="new-password"
+          formControlName="password"
+          [class.invalid]="password.touched && password.invalid"
+        />
+        @if (password.touched && password.hasError('required')) {
+          <span class="field-error">Password is required.</span>
+        } @else if (password.touched && password.hasError('minlength')) {
+          <span class="field-error">Password must be at least 8 characters.</span>
+        } @else if (password.touched && password.hasError('weakPassword')) {
+          <span class="field-error">Use at least one letter and one number.</span>
+        } @else {
+          <span class="muted small">At least 8 characters, with a letter and a number.</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="label" for="confirmPassword">Confirm password</label>
+        @let confirm = form.controls.confirmPassword;
+        @let mismatch = confirm.touched && form.hasError('fieldsMismatch');
+        <input
+          id="confirmPassword"
+          class="input"
+          type="password"
+          autocomplete="new-password"
+          formControlName="confirmPassword"
+          [class.invalid]="(confirm.touched && confirm.invalid) || mismatch"
+        />
+        @if (confirm.touched && confirm.hasError('required')) {
+          <span class="field-error">Please confirm your password.</span>
+        } @else if (mismatch) {
+          <span class="field-error">Passwords do not match.</span>
+        }
+      </div>
+
+      <button class="btn btn-primary btn-block" type="submit" [disabled]="submitting()">
+        {{ submitting() ? 'Creating account…' : 'Sign up' }}
+      </button>
+    </form>
+
+    <p class="auth-footer">Already have an account? <a routerLink="/login">Log in</a></p>
+  </section>
+</main>

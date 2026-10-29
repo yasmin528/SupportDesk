@@ -1,0 +1,74 @@
+@let current = state();
+<section class="container page">
+  <header class="page-header">
+    <div>
+      <h1>Hello, {{ user()?.name ?? 'there' }}</h1>
+      <p class="muted">
+        Here is what is happening in the queue.
+        @if (current.updatedAt) {
+          <span class="small">Updated {{ current.updatedAt | date: 'shortTime' }}.</span>
+        }
+      </p>
+    </div>
+    <div class="row">
+      <button type="button" class="btn btn-secondary" [disabled]="current.loading" (click)="refresh()">
+        {{ current.loading ? 'Refreshing…' : '↻ Refresh' }}
+      </button>
+      <a routerLink="tickets" class="btn btn-primary">View tickets</a>
+    </div>
+  </header>
+
+  @if (current.error) {
+    <div class="card card-body stack">
+      <div class="alert alert-error" role="alert">{{ current.error }}</div>
+      <div><button type="button" class="btn btn-secondary" (click)="refresh()">Try again</button></div>
+    </div>
+  } @else if (!current.stats) {
+    <div class="card"><app-spinner label="Loading overview…" /></div>
+  } @else {
+    @let stats = current.stats;
+    <div class="grid-stats">
+      <button type="button" class="stat-button" (click)="openTickets({})">
+        <app-stat-card label="All tickets" [value]="stats.total" tone="accent" hint="View all" />
+      </button>
+      <button type="button" class="stat-button" (click)="openTickets({ status: 'open' })">
+        <app-stat-card label="Open" [value]="stats.byStatus.open" tone="info" hint="Waiting for an agent" />
+      </button>
+      <button type="button" class="stat-button" (click)="openTickets({ status: 'in_progress' })">
+        <app-stat-card label="In progress" [value]="stats.byStatus.in_progress" tone="warning" hint="Being worked on" />
+      </button>
+      <button type="button" class="stat-button" (click)="openTickets({ status: 'resolved' })">
+        <app-stat-card label="Resolved" [value]="stats.byStatus.resolved" tone="success" hint="Closed out" />
+      </button>
+    </div>
+
+    <div class="overview-layout" [class.dimmed]="current.loading">
+      <article class="card card-body stack">
+        <h2 class="section-title">Tickets by priority</h2>
+        <ul class="list breakdown">
+          @for (row of priorityRows(); track row.label) {
+            <li>
+              <button type="button" class="breakdown-row" (click)="openTickets(row.filters)">
+                <span class="breakdown-label">{{ row.label }}</span>
+                <span class="bar" role="presentation">
+                  <span [class]="'bar-fill tone-' + row.tone" [style.width.%]="row.percent"></span>
+                </span>
+                <span class="breakdown-count">{{ row.count }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+        <p class="muted small">Click a row or card to open the filtered ticket list.</p>
+      </article>
+
+      <article class="card card-body stack">
+        <div class="row">
+          <h2 class="section-title">Recent activity</h2>
+          <span class="spacer"></span>
+          <span class="muted small">Auto-refreshes every 30 s</span>
+        </div>
+        <app-activity-feed [items]="current.activity" emptyMessage="Nothing has happened yet." />
+      </article>
+    </div>
+  }
+</section>

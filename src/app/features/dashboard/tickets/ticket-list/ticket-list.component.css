@@ -1,0 +1,77 @@
+.table-wrap {
+  overflow-x: auto;
+  transition: opacity 0.15s;
+}
+
+.dimmed {
+  opacity: 0.6;
+}
+
+.tickets {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tickets th {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tickets td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.tickets tr:last-child td {
+  border-bottom: 0;
+}
+
+.tickets tbody tr:hover {
+  background: var(--surface-muted);
+}
+
+.ticket-link {
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+}
+
+.ticket-link:hover .ticket-title {
+  color: var(--accent);
+}
+
+.ticket-id {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ticket-title {
+  font-weight: 500;
+}
+
+.cell-main {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .hide-md {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .tickets th,
+  .tickets td {
+    padding: 10px 12px;
+  }
+}

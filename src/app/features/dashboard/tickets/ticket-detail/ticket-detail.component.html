@@ -1,0 +1,166 @@
+@let current = state();
+<section class="container page">
+  <a routerLink="/dashboard/tickets" class="small">← All tickets</a>
+
+  @if (current.error) {
+    <div class="card mt">
+      <app-empty-state icon="⚠️" title="Ticket unavailable" [message]="current.error">
+        <a routerLink="/dashboard/tickets" class="btn btn-secondary">Back to tickets</a>
+      </app-empty-state>
+    </div>
+  } @else if (!current.details) {
+    <app-spinner label="Loading ticket…" />
+  } @else {
+    @let ticket = current.details.ticket;
+    <header class="page-header mt">
+      <div>
+        <p class="ticket-id">{{ ticket.id }}</p>
+        <h1>{{ ticket.title }}</h1>
+        <div class="row header-badges">
+          <app-status-badge [status]="ticket.status" />
+          <app-priority-badge [priority]="ticket.priority" />
+          <span class="muted small">Opened {{ ticket.createdAt | timeAgo }} by {{ ticket.requesterName }}</span>
+          @if (current.loading) {
+            <span class="muted small">· Refreshing…</span>
+          }
+        </div>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="openEdit()">Edit</button>
+        <button type="button" class="btn btn-danger" [disabled]="busy()" (click)="confirmingDelete.set(true)">Delete</button>
+      </div>
+    </header>
+
+    <div class="detail-layout">
+      <div class="stack">
+        <article class="card card-body">
+          <h2 class="section-title">Description</h2>
+          <p class="description">{{ ticket.description }}</p>
+        </article>
+
+        <article class="card card-body stack">
+          <h2 class="section-title">Activity</h2>
+          <form class="stack comment-form" (submit)="$event.preventDefault(); postComment(ticket)">
+            <label class="label" for="comment">Add a comment</label>
+            <textarea
+              id="comment"
+              class="textarea"
+              placeholder="Write an update for the team…"
+              [formControl]="commentControl"
+              [class.invalid]="commentControl.touched && commentControl.invalid"
+            ></textarea>
+            @if (commentControl.touched && commentControl.hasError('required')) {
+              <span class="field-error">Write something first.</span>
+            } @else if (commentControl.touched && commentControl.hasError('minlength')) {
+              <span class="field-error">Comment is too short.</span>
+            } @else if (commentControl.hasError('maxlength')) {
+              <span class="field-error">Comments are limited to 1000 characters.</span>
+            }
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-sm" [disabled]="postingComment()">
+                {{ postingComment() ? 'Posting…' : 'Post comment' }}
+              </button>
+            </div>
+          </form>
+          <app-activity-feed [items]="current.details.activity" [showTicket]="false" />
+        </article>
+      </div>
+
+      <aside class="stack">
+        <div class="card card-body stack">
+          <h2 class="section-title">Properties</h2>
+          <div class="form-field">
+            <label class="label" for="status">Status</label>
+            <select
+              #statusSelect
+              id="status"
+              class="select"
+              [disabled]="busy()"
+              (change)="changeStatus(ticket, $any(statusSelect.value))"
+            >
+              @for (option of statuses; track option.value) {
+                <option [value]="option.value" [selected]="option.value === ticket.status">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="label" for="priority">Priority</label>
+            <select
+              #prioritySelect
+              id="priority"
+              class="select"
+              [disabled]="busy()"
+              (change)="changePriority(ticket, $any(prioritySelect.value))"
+            >
+              @for (option of priorities; track option.value) {
+                <option [value]="option.value" [selected]="option.value === ticket.priority">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="label" for="assignee">Assignee</label>
+            <select
+              #assigneeSelect
+              id="assignee"
+              class="select"
+              [disabled]="busy()"
+              (change)="changeAssignee(ticket, assigneeSelect.value)"
+            >
+              <option value="" [selected]="!ticket.assigneeId">Unassigned</option>
+              @for (agent of agents(); track agent.id) {
+                <option [value]="agent.id" [selected]="agent.id === ticket.assigneeId">{{ agent.name }}</option>
+              }
+            </select>
+          </div>
+          <dl class="props">
+            <dt>Requester</dt>
+            <dd>{{ ticket.requesterName }}<br /><span class="muted small">{{ ticket.requesterEmail }}</span></dd>
+            <dt>Assigned to</dt>
+            <dd>{{ assigneeName() }}</dd>
+            <dt>Created</dt>
+            <dd>{{ ticket.createdAt | date: 'medium' }}</dd>
+            <dt>Last updated</dt>
+            <dd>{{ ticket.updatedAt | date: 'medium' }}</dd>
+          </dl>
+        </div>
+
+        <div class="card card-body stack">
+          <h2 class="section-title">Other tickets from {{ ticket.requesterName }}</h2>
+          @if (current.details.relatedTickets.length === 0) {
+            <p class="muted small">No other tickets from this requester.</p>
+          } @else {
+            <ul class="list related">
+              @for (related of current.details.relatedTickets; track related.id) {
+                <li>
+                  <a [routerLink]="['/dashboard/tickets', related.id]">{{ related.id }} · {{ related.title }}</a>
+                  <app-status-badge [status]="related.status" />
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </aside>
+    </div>
+
+    @if (editing()) {
+      <app-ticket-form
+        [ticket]="ticket"
+        [agents]="agents()"
+        [saving]="busy()"
+        [error]="formError()"
+        (saved)="saveEdit(ticket, $event)"
+        (cancelled)="editing.set(false)"
+      />
+    }
+
+    @if (confirmingDelete()) {
+      <app-confirm-dialog
+        [title]="'Delete ' + ticket.id + '?'"
+        [message]="'“' + ticket.title + '” and its activity will be removed for everyone.'"
+        [busy]="busy()"
+        (confirmed)="deleteTicket(ticket)"
+        (cancelled)="confirmingDelete.set(false)"
+      />
+    }
+  }
+</section>

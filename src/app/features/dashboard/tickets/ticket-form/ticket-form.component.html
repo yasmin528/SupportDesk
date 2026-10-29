@@ -1,0 +1,105 @@
+<app-modal [title]="ticket() ? 'Edit ' + ticket()?.id : 'New ticket'" [width]="600" (closed)="cancelled.emit()">
+  <form class="stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (error()) {
+      <div class="alert alert-error" role="alert">{{ error() }}</div>
+    }
+
+    <div class="form-field">
+      <label class="label" for="title">Title</label>
+      @let title = form.controls.title;
+      <input id="title" class="input" formControlName="title" [class.invalid]="title.touched && title.invalid" />
+      @if (title.touched && title.hasError('required')) {
+        <span class="field-error">Title is required.</span>
+      } @else if (title.touched && title.hasError('minlength')) {
+        <span class="field-error">Title must be at least 5 characters.</span>
+      } @else if (title.touched && title.hasError('maxlength')) {
+        <span class="field-error">Title must be 120 characters or fewer.</span>
+      }
+    </div>
+
+    <div class="form-field">
+      <label class="label" for="description">Description</label>
+      @let description = form.controls.description;
+      <textarea
+        id="description"
+        class="textarea"
+        formControlName="description"
+        [class.invalid]="description.touched && description.invalid"
+      ></textarea>
+      @if (description.touched && description.hasError('required')) {
+        <span class="field-error">Describe the problem.</span>
+      } @else if (description.touched && description.hasError('minlength')) {
+        <span class="field-error">Description must be at least 10 characters.</span>
+      } @else if (description.hasError('maxlength')) {
+        <span class="field-error">Description must be 2000 characters or fewer.</span>
+      }
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="label" for="requesterName">Requester name</label>
+        @let requesterName = form.controls.requesterName;
+        <input
+          id="requesterName"
+          class="input"
+          formControlName="requesterName"
+          [class.invalid]="requesterName.touched && requesterName.invalid"
+        />
+        @if (requesterName.touched && requesterName.hasError('required')) {
+          <span class="field-error">Requester name is required.</span>
+        }
+      </div>
+      <div class="form-field">
+        <label class="label" for="requesterEmail">Requester email</label>
+        @let requesterEmail = form.controls.requesterEmail;
+        <input
+          id="requesterEmail"
+          class="input"
+          type="email"
+          formControlName="requesterEmail"
+          [class.invalid]="requesterEmail.touched && requesterEmail.invalid"
+        />
+        @if (requesterEmail.touched && requesterEmail.hasError('required')) {
+          <span class="field-error">Requester email is required.</span>
+        } @else if (requesterEmail.touched && requesterEmail.hasError('email')) {
+          <span class="field-error">Enter a valid email address.</span>
+        }
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="label" for="status">Status</label>
+        <select id="status" class="select" formControlName="status">
+          @for (option of statuses; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="label" for="priority">Priority</label>
+        <select id="priority" class="select" formControlName="priority">
+          @for (option of priorities; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="label" for="assignee">Assignee</label>
+        <select id="assignee" class="select" formControlName="assigneeId">
+          <option value="">Unassigned</option>
+          @for (agent of agents(); track agent.id) {
+            <option [value]="agent.id">{{ agent.name }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="cancelled.emit()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : ticket() ? 'Save changes' : 'Create ticket' }}
+      </button>
+    </div>
+  </form>
+</app-modal>
